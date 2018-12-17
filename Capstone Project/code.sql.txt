@@ -1,0 +1,91 @@
+select count(DISTINCT utm_source) AS 'Source'
+from page_visits;
+
+select count(DISTINCT utm_campaign) AS 'Campaign'
+from page_visits;
+
+select DISTINCT utm_source, utm_campaign
+from page_visits;
+
+select DISTINCT page_name
+from page_visits;
+
+WITH first_touch AS (
+    SELECT user_id,
+        MIN(timestamp) as first_touch_at
+    FROM page_visits
+    GROUP BY user_id)
+SELECT ft.user_id,
+    ft.first_touch_at,
+    pv.utm_source,
+		pv.utm_campaign,
+    COUNT (utm_campaign) 
+FROM first_touch ft
+JOIN page_visits pv
+    ON ft.user_id = pv.user_id
+    AND ft.first_touch_at = pv.timestamp
+GROUP BY utm_campaign
+ORDER BY 5 DESC;
+
+WITH last_touch AS (
+    SELECT user_id,
+        MAX(timestamp) as last_touch_at
+    FROM page_visits
+    GROUP BY user_id)
+SELECT lt.user_id,
+    lt.last_touch_at,
+    pv.utm_source,
+		pv.utm_campaign,
+    COUNT (utm_campaign)
+FROM last_touch lt
+JOIN page_visits pv
+    ON lt.user_id = pv.user_id
+    AND lt.last_touch_at = pv.timestamp
+GROUP BY utm_campaign
+ORDER BY 5 DESC;
+    
+SELECT COUNT (DISTINCT user_id) as 'Last_Touch_purchase'
+FROM page_visits
+WHERE page_name = '4 - purchase';
+
+WITH last_touch AS (
+    SELECT user_id,
+        MAX(timestamp) AS last_touch_at
+    FROM page_visits
+  	where page_name = '3 - checkout'
+    GROUP BY user_id)
+SELECT COUNT(DISTINCT pv.user_id) AS 'Last_Touch_checkout'
+FROM last_touch lt
+JOIN page_visits pv
+    ON lt.user_id = pv.user_id
+    AND lt.last_touch_at = pv.timestamp;
+    
+WITH last_touch AS (
+    SELECT user_id,
+        MAX(timestamp) as last_touch_at
+    FROM page_visits
+  	WHERE page_name = '2 - shopping_cart'
+    GROUP BY user_id)
+SELECT COUNT(DISTINCT pv.user_id) AS 'Last_Touch_shopping_cart'
+FROM last_touch lt
+JOIN page_visits pv
+    ON lt.user_id = pv.user_id
+    AND lt.last_touch_at = pv.timestamp;
+
+WITH last_touch AS (
+    SELECT user_id,
+        MAX(timestamp) as last_touch_at
+    FROM page_visits
+  	where page_name = '4 - purchase'
+    GROUP BY user_id)
+SELECT lt.user_id,
+    lt.last_touch_at,
+    pv.utm_source,
+		pv.utm_campaign AS 'Campaign',
+    COUNT (utm_campaign) AS 'Last_Touch_To_Purchase'
+FROM last_touch lt
+JOIN page_visits pv
+    ON lt.user_id = pv.user_id
+    AND lt.last_touch_at = pv.timestamp
+GROUP BY utm_campaign
+ORDER BY 5 DESC;
